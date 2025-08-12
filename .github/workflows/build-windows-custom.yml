@@ -5,9 +5,10 @@ jobs:
   build:
     runs-on: windows-latest
     env:
+      # bunlar Secrets altında tanımlı olmalı
       RENDEZVOUS_SERVER: ${{ secrets.RENDEZVOUS_SERVER }}
       RS_PUB_KEY: ${{ secrets.RS_PUB_KEY }}
-      VCPKG_DEFAULT_TRIPLET: x64-windows-static
+
     steps:
       - name: Checkout (with submodules)
         uses: actions/checkout@v4
@@ -22,20 +23,9 @@ jobs:
         with:
           version: "16"
 
-      # 🔵 VCPKG'i kur ve gerekli paketleri indir (ENV/VCPKG_ROOT'u otomatik ayarlar)
-      - name: Setup vcpkg and AV deps
-        uses: johnwason/vcpkg-action@v6
-        with:
-          triplet: x64-windows-static
-          runVcpkgInstall: true
-          packages: |
-            opus
-            libvpx
-            libyuv
-            aom
-
-      - name: Build (release)
-        run: cargo build --release
+      # 🔹 Kodekleri kapatarak derliyoruz (vcpkg gerekmez)
+      - name: Build (release, no AV deps)
+        run: cargo build --release --no-default-features
 
       - name: Download sciter.dll (GUI runtime)
         shell: pwsh
