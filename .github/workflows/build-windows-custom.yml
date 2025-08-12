@@ -1,0 +1,39 @@
+name: Build Windows custom RustDesk
+on: workflow_dispatch
+
+jobs:
+  build:
+    runs-on: windows-latest
+    env:
+      RENDEZVOUS_SERVER: ${{ secrets.RENDEZVOUS_SERVER }}
+      RS_PUB_KEY: ${{ secrets.RS_PUB_KEY }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install LLVM (clang) for bindgen
+        uses: KyleMayes/install-llvm-action@v2
+        with:
+          version: "16"
+
+      - name: Build (release)
+        run: cargo build --release
+
+      - name: Download sciter.dll (GUI runtime)
+        shell: pwsh
+        run: |
+          Invoke-WebRequest https://raw.githubusercontent.com/c-smile/sciter-sdk/master/bin.win/x64/sciter.dll `
+            -OutFile target/release/sciter.dll
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rustdesk-windows-custom
+          path: |
+            target/release/rustdesk.exe
+            target/release/sciter.dll
