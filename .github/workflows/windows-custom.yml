@@ -1,0 +1,63 @@
+name: Windows Custom (Portable)
+
+on:
+  workflow_dispatch:
+    inputs:
+      server:
+        description: "HBBS/HBBR sunucu FQDN veya IP (ör. rustdesk.artvin.edu.tr)"
+        required: true
+        type: string
+      key:
+        description: "HBBS public key (hbbs_pubkey_1=... ile başlayan satır)"
+        required: true
+        type: string
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout (with submodules)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Rust (MSVC)
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Show rustc version
+        run: rustc -V
+
+      - name: Build (release)
+        shell: powershell
+        run: |
+          cargo build --release
+
+      - name: Create RustDesk2.toml with your server & key
+        shell: powershell
+        run: |
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          $server = "${{ github.event.inputs.server }}"
+          $key    = "${{ github.event.inputs.key }}"
+          @"
+[server]
+host = "$server"
+key  = "$key"
+"@ | Out-File -FilePath dist\RustDesk2.toml -Encoding UTF8
+
+      - name: Collect binaries
+        shell: powershell
+        run: |
+          Copy-Item -Path target\release\rustdesk.exe -Destination dist\RustDesk.exe
+
+      - name: Make portable zip
+        shell: powershell
+        run: |
+          Compress-Archive -Path dist\* -DestinationPath rustdesk-windows-custom-portable.zip
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rustdesk-windows-custom-portable
+          path: rustdesk-windows-custom-portable.zip
+          if-no-files-found: error
