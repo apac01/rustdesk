@@ -7,7 +7,6 @@ jobs:
     env:
       RENDEZVOUS_SERVER: ${{ secrets.RENDEZVOUS_SERVER }}
       RS_PUB_KEY: ${{ secrets.RS_PUB_KEY }}
-      VCPKG_ROOT: ${{ runner.temp }}\vcpkg
       VCPKG_DEFAULT_TRIPLET: x64-windows-static
     steps:
       - name: Checkout
@@ -26,8 +25,10 @@ jobs:
       - name: Install vcpkg
         shell: pwsh
         run: |
+          $env:VCPKG_ROOT = "$env:RUNNER_TEMP\vcpkg"
           git clone https://github.com/microsoft/vcpkg $env:VCPKG_ROOT
           & $env:VCPKG_ROOT\bootstrap-vcpkg.bat
+          echo "VCPKG_ROOT=$env:VCPKG_ROOT" | Out-File -FilePath $env:GITHUB_ENV -Append
 
       - name: Install AV deps via vcpkg
         shell: pwsh
