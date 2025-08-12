@@ -4,11 +4,11 @@ on:
   workflow_dispatch:
     inputs:
       server:
-        description: "rustdesk.artvin.edu.tr"
+        description: ""
         required: true
         type: string
       key:
-        description: "+dipY7AS+hXCquouAb19pDBqZoSYTasq1ze3FB8XL20="
+        description: ""
         required: true
         type: string
 
