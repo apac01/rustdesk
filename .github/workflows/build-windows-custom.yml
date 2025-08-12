@@ -7,7 +7,6 @@ jobs:
     env:
       RENDEZVOUS_SERVER: ${{ secrets.RENDEZVOUS_SERVER }}
       RS_PUB_KEY: ${{ secrets.RS_PUB_KEY }}
-      VCPKG_DEFAULT_TRIPLET: x64-windows-static
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -22,20 +21,8 @@ jobs:
         with:
           version: "16"
 
-      - name: Install vcpkg
-        shell: pwsh
-        run: |
-          $env:VCPKG_ROOT = "$env:RUNNER_TEMP\vcpkg"
-          git clone https://github.com/microsoft/vcpkg $env:VCPKG_ROOT
-          & $env:VCPKG_ROOT\bootstrap-vcpkg.bat
-          echo "VCPKG_ROOT=$env:VCPKG_ROOT" | Out-File -FilePath $env:GITHUB_ENV -Append
-
-      - name: Install AV deps via vcpkg
-        shell: pwsh
-        run: |
-          & $env:VCPKG_ROOT\vcpkg.exe install libvpx:x64-windows-static libyuv:x64-windows-static opus:x64-windows-static aom:x64-windows-static
-      - name: Build (release)
-        run: cargo build --release
+      - name: Build (release, no AV deps)
+        run: cargo build --release --no-default-features
 
       - name: Download sciter.dll (GUI runtime)
         shell: pwsh
