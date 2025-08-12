@@ -7,8 +7,9 @@ jobs:
     env:
       RENDEZVOUS_SERVER: ${{ secrets.RENDEZVOUS_SERVER }}
       RS_PUB_KEY: ${{ secrets.RS_PUB_KEY }}
+      VCPKG_DEFAULT_TRIPLET: x64-windows-static
     steps:
-      - name: Checkout
+      - name: Checkout (with submodules)
         uses: actions/checkout@v4
         with:
           submodules: true
@@ -21,8 +22,20 @@ jobs:
         with:
           version: "16"
 
-      - name: Build (release, no AV deps)
-        run: cargo build --release --no-default-features
+      # 🔵 VCPKG'i kur ve gerekli paketleri indir (ENV/VCPKG_ROOT'u otomatik ayarlar)
+      - name: Setup vcpkg and AV deps
+        uses: johnwason/vcpkg-action@v6
+        with:
+          triplet: x64-windows-static
+          runVcpkgInstall: true
+          packages: |
+            opus
+            libvpx
+            libyuv
+            aom
+
+      - name: Build (release)
+        run: cargo build --release
 
       - name: Download sciter.dll (GUI runtime)
         shell: pwsh
