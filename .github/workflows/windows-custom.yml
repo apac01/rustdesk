@@ -4,11 +4,11 @@ on:
   workflow_dispatch:
     inputs:
       server:
-        description: "HBBS/HBBR sunucu FQDN veya IP (ör. rustdesk.artvin.edu.tr)"
+        description: "rustdesk.artvin.edu.tr"
         required: true
         type: string
       key:
-        description: "HBBS public key (hbbs_pubkey_1=... ile başlayan satır)"
+        description: "+dipY7AS+hXCquouAb19pDBqZoSYTasq1ze3FB8XL20="
         required: true
         type: string
 
