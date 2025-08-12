@@ -1,16 +1,7 @@
-name: Windows Custom (Portable)
+name: Windows Custom (Portable, Secrets)
 
 on:
   workflow_dispatch:
-    inputs:
-      server:
-        description: ""
-        required: true
-        type: string
-      key:
-        description: ""
-        required: true
-        type: string
 
 jobs:
   build:
@@ -25,20 +16,19 @@ jobs:
       - name: Install Rust (MSVC)
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Show rustc version
-        run: rustc -V
-
       - name: Build (release)
         shell: powershell
-        run: |
-          cargo build --release
+        run: cargo build --release
 
-      - name: Create RustDesk2.toml with your server & key
+      - name: Create RustDesk2.toml with secrets
         shell: powershell
         run: |
           New-Item -ItemType Directory -Force -Path dist | Out-Null
-          $server = "${{ github.event.inputs.server }}"
-          $key    = "${{ github.event.inputs.key }}"
+          $server = "${{ secrets.RD_SERVER }}"
+          $key    = "${{ secrets.RD_KEY }}"
+          if (-not $server) { throw "RD_SERVER secret missing" }
+          if (-not $key)    { throw "RD_KEY secret missing" }
+          if ($key -notmatch "^hbbs_pubkey_1=") { throw "RD_KEY must start with hbbs_pubkey_1=" }
           @"
 [server]
 host = "$server"
@@ -48,12 +38,12 @@ key  = "$key"
       - name: Collect binaries
         shell: powershell
         run: |
-          Copy-Item -Path target\release\rustdesk.exe -Destination dist\RustDesk.exe
+          Copy-Item target\release\rustdesk.exe dist\RustDesk.exe
 
-      - name: Make portable zip
+      - name: Package zip
         shell: powershell
         run: |
-          Compress-Archive -Path dist\* -DestinationPath rustdesk-windows-custom-portable.zip
+          Compress-Archive -Path dist\* -DestinationPath rustdesk-windows-custom-portable.zip -Force
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
